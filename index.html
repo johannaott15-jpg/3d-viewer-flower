@@ -143,58 +143,72 @@
     </div>
   </div>
 
-  <script>
-    const mv = document.getElementById("mv");
-    const overlay = document.getElementById("overlay");
-    const bar = document.getElementById("bar");
-    const statusText = document.getElementById("statusText");
-    const err = document.getElementById("err");
-    const reset = document.getElementById("reset");
-    const toggleRotate = document.getElementById("toggleRotate");
+ <script>
+  const mv = document.getElementById("mv");
+  const overlay = document.getElementById("overlay");
+  const bar = document.getElementById("bar");
+  const statusText = document.getElementById("statusText");
+  const err = document.getElementById("err");
+  const reset = document.getElementById("reset");
+  const toggleRotate = document.getElementById("toggleRotate");
 
-    // Progress (zeigt dir sofort, ob überhaupt geladen wird)
-    mv.addEventListener("progress", (e) => {
-      const p = Math.round((e.detail.totalProgress || 0) * 100);
-      bar.style.width = p + "%";
-      statusText.innerHTML = `<strong>Lädt Modell…</strong> ${p}%`;
-      overlay.classList.add("on");
-    });
+  let lastProgress = 0;
+  let overlayHidden = false;
 
-    mv.addEventListener("load", async () => {
-      // Overlay weg
-      overlay.classList.remove("on");
-      err.style.display = "none";
+  function hideOverlay() {
+    if (overlayHidden) return;
+    overlayHidden = true;
+    overlay.classList.remove("on");
+    if (err) err.style.display = "none";
+  }
 
-      // Kamera automatisch passend setzen (hilft bei falscher Skalierung/Position)
-      try {
-        const d = mv.getDimensions(); // {x,y,z} in Metern (modellabhängig)
-        const maxDim = Math.max(d.x, d.y, d.z) || 1;
-        const dist = Math.max(0.6, maxDim * 2.2); // heuristik
-        mv.cameraOrbit = `45deg 75deg ${dist}m`;
-        mv.fieldOfView = "30deg";
-        mv.jumpCameraToGoal();
-      } catch (e) {
-        // falls getDimensions nicht verfügbar (selten), ignorieren
-      }
-    });
+  // Progress: wenn 100% erreicht, Overlay sicher ausblenden
+  mv.addEventListener("progress", (e) => {
+    const p = Math.round((e.detail.totalProgress || 0) * 100);
+    lastProgress = p;
 
-    mv.addEventListener("error", (e) => {
-      overlay.classList.remove("on");
+    bar.style.width = p + "%";
+    statusText.innerHTML = `<strong>Lädt Modell…</strong> ${p}%`;
+    overlay.classList.add("on");
+
+    if (p >= 100) {
+      // kleines Delay, damit Rendering fertig ist
+      setTimeout(hideOverlay, 250);
+    }
+  });
+
+  // Wenn load doch feuert: auch gut
+  mv.addEventListener("load", () => {
+    hideOverlay();
+  });
+
+  // Fallback: wenn nach X Sekunden 100% erreicht wurde, aber overlay bleibt
+  setInterval(() => {
+    if (!overlayHidden && lastProgress >= 100) hideOverlay();
+  }, 500);
+
+  mv.addEventListener("error", (e) => {
+    // Nur zeigen, wenn wirklich nix gerendert wird. Da es bei dir sichtbar ist,
+    // lassen wir das Overlay hier nicht "fest" hängen.
+    overlay.classList.remove("on");
+    if (err) {
       err.style.display = "block";
       err.textContent =
-        "Fehler: Modell/Viewer konnte nicht geladen werden. Häufige Ursache: Script wird geblockt (Adblock/Tracking-Schutz) oder WebGL ist deaktiviert. Teste in Chrome/Edge oder deaktiviere Blocker für github.io.";
-      console.log("model-viewer error:", e);
-    });
+        "Hinweis: Es gab ein Problem bei einem Teil-Ladevorgang (z.B. Environment). Wenn das Modell sichtbar ist, kannst du diese Meldung ignorieren.";
+    }
+    console.log("model-viewer error:", e);
+  });
 
-    reset.addEventListener("click", () => {
-      mv.cameraOrbit = "45deg 75deg 2m";
-      mv.fieldOfView = "30deg";
-      mv.jumpCameraToGoal();
-    });
+  reset.addEventListener("click", () => {
+    mv.cameraOrbit = "45deg 75deg 2m";
+    mv.fieldOfView = "30deg";
+    mv.jumpCameraToGoal();
+  });
 
-    toggleRotate.addEventListener("click", () => {
-      mv.autoRotate = !mv.autoRotate;
-    });
-  </script>
+  toggleRotate.addEventListener("click", () => {
+    mv.autoRotate = !mv.autoRotate;
+  });
+</script>
+
 </body>
 </html>
