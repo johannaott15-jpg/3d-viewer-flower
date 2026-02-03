@@ -5,66 +5,196 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D Viewer – Flowersrosa</title>
 
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <!-- Nimm jsDelivr statt unpkg (wird seltener von Blockern geblockt) -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js"></script>
 
   <style>
-    :root{
-      --radius: 18px;
-      --shadow: 0 8px 24px rgba(0,0,0,.12);
+    :root{ --radius:18px; --shadow:0 8px 24px rgba(0,0,0,.12); }
+    html,body{
+      margin:0; height:100%;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:#f6f3ef; color:#2b2b2b;
     }
-    html, body{
-      margin: 0;
-      height: 100%;
-      background: #f6f3ef;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: #2b2b2b;
-    }
-    .wrap{
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 14px;
-    }
+    .wrap{ max-width:980px; margin:0 auto; padding:14px; }
     .card{
-      background: #fff;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      background:#fff; border-radius:var(--radius);
+      box-shadow:var(--shadow); overflow:hidden;
+      position:relative;
     }
+
     model-viewer{
-      width: 100%;
-      height: 70vh;
-      min-height: 420px;
-      background: #fff;
-      display: block;
+      width:100%;
+      height:70vh;
+      min-height:420px;
+      display:block;
+      /* “Nicht-weiß” Hintergrund, damit du siehst, dass gerendert wird */
+      background:
+        linear-gradient(0deg, rgba(0,0,0,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      background-color:#fff;
     }
+
     .bar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 10px 12px;
-      border-top: 1px solid rgba(0,0,0,.08);
-      font-size: 12.5px;
-      opacity: .9;
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center; justify-content:space-between;
+      padding:10px 12px;
+      border-top:1px solid rgba(0,0,0,.08);
+      font-size:12.5px;
     }
-    .hint{ opacity: .75; }
+    .hint{ opacity:.75; }
     .btn{
       border:1px solid rgba(0,0,0,.14);
       background:#fff;
       padding:8px 10px;
-      border-radius: 12px;
+      border-radius:12px;
       cursor:pointer;
-      font-size: 12.5px;
+      font-size:12.5px;
       line-height:1;
     }
-    .btn:hover{ background: rgba(0,0,0,.03); }
+    .btn:hover{ background:rgba(0,0,0,.03); }
+
+    /* Overlay */
+    .overlay{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none;
+      background:rgba(255,255,255,.85);
+      opacity:0; transition:.2s;
+    }
+    .overlay.on{ opacity:1; }
+    .overlay .box{
+      pointer-events:auto;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:14px;
+      padding:12px 14px;
+      box-shadow:0 10px 26px rgba(0,0,0,.12);
+      width:min(360px, 86%);
+      font-size:13px;
+    }
+    .progressbar{
+      height:10px; border-radius:999px;
+      background:rgba(0,0,0,.08);
+      overflow:hidden; margin-top:8px;
+    }
+    .progressbar > div{
+      height:100%; width:0%;
+      background:rgba(0,0,0,.35);
+      transition:width .15s;
+    }
+
     .err{
       display:none;
-      padding: 10px 12px;
-      font-size: 12.5px;
-      color: #b00020;
-      background: rgba(176,0,32,.06);
-      border-top: 1px solid rgba(0,0,0,.08);
+      padding:10px 12px;
+      font-size:12.5px;
+      color:#b00020;
+      background:rgba(176,0,32,.06);
+      border-top:1px solid rgba(0,0,0,.08);
     }
-    @media (max-width: 700px){
-      model-viewer{ height: 60
+
+    @media (max-width:700px){
+      model-viewer{ height:60vh; min-height:360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+
+      <model-viewer
+        id="mv"
+        src="./Flowersrosa.glb"
+        alt="3D Icon Flowersrosa"
+        camera-controls
+        touch-action="pan-y"
+        auto-rotate
+        rotation-per-second="18deg"
+
+        environment-image="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr"
+        exposure="1.45"
+        shadow-intensity="0.85"
+        shadow-softness="0.8"
+
+        min-camera-orbit="auto auto 0.05m"
+        max-camera-orbit="auto auto 50m"
+        field-of-view="30deg"
+      ></model-viewer>
+
+      <div class="overlay on" id="overlay">
+        <div class="box">
+          <div id="statusText"><strong>Lädt Modell…</strong></div>
+          <div class="progressbar"><div id="bar"></div></div>
+          <div style="margin-top:8px; opacity:.75; font-size:12px;">
+            Wenn das nicht fertig lädt: Script-Blocker / WebGL / Materialproblem.
+          </div>
+        </div>
+      </div>
+
+      <div class="bar">
+        <div class="hint" id="hint">Tipp: Mit Maus/Finger drehen · Scroll/Pinch zoomen</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="reset" type="button">Ansicht zurücksetzen</button>
+          <button class="btn" id="toggleRotate" type="button">Auto-Rotate: an/aus</button>
+        </div>
+      </div>
+
+      <div class="err" id="err"></div>
+    </div>
+  </div>
+
+  <script>
+    const mv = document.getElementById("mv");
+    const overlay = document.getElementById("overlay");
+    const bar = document.getElementById("bar");
+    const statusText = document.getElementById("statusText");
+    const err = document.getElementById("err");
+    const reset = document.getElementById("reset");
+    const toggleRotate = document.getElementById("toggleRotate");
+
+    // Progress (zeigt dir sofort, ob überhaupt geladen wird)
+    mv.addEventListener("progress", (e) => {
+      const p = Math.round((e.detail.totalProgress || 0) * 100);
+      bar.style.width = p + "%";
+      statusText.innerHTML = `<strong>Lädt Modell…</strong> ${p}%`;
+      overlay.classList.add("on");
+    });
+
+    mv.addEventListener("load", async () => {
+      // Overlay weg
+      overlay.classList.remove("on");
+      err.style.display = "none";
+
+      // Kamera automatisch passend setzen (hilft bei falscher Skalierung/Position)
+      try {
+        const d = mv.getDimensions(); // {x,y,z} in Metern (modellabhängig)
+        const maxDim = Math.max(d.x, d.y, d.z) || 1;
+        const dist = Math.max(0.6, maxDim * 2.2); // heuristik
+        mv.cameraOrbit = `45deg 75deg ${dist}m`;
+        mv.fieldOfView = "30deg";
+        mv.jumpCameraToGoal();
+      } catch (e) {
+        // falls getDimensions nicht verfügbar (selten), ignorieren
+      }
+    });
+
+    mv.addEventListener("error", (e) => {
+      overlay.classList.remove("on");
+      err.style.display = "block";
+      err.textContent =
+        "Fehler: Modell/Viewer konnte nicht geladen werden. Häufige Ursache: Script wird geblockt (Adblock/Tracking-Schutz) oder WebGL ist deaktiviert. Teste in Chrome/Edge oder deaktiviere Blocker für github.io.";
+      console.log("model-viewer error:", e);
+    });
+
+    reset.addEventListener("click", () => {
+      mv.cameraOrbit = "45deg 75deg 2m";
+      mv.fieldOfView = "30deg";
+      mv.jumpCameraToGoal();
+    });
+
+    toggleRotate.addEventListener("click", () => {
+      mv.autoRotate = !mv.autoRotate;
+    });
+  </script>
+</body>
+</html>
