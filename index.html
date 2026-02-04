@@ -5,44 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D Viewer – Flowersrosa</title>
 
-  <!-- Nimm jsDelivr statt unpkg (wird seltener von Blockern geblockt) -->
+  <!-- model-viewer -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js"></script>
 
   <style>
-    :root{ --radius:18px; --shadow:0 8px 24px rgba(0,0,0,.12); }
-    html,body{
-      margin:0; height:100%;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:#f6f3ef; color:#2b2b2b;
+    :root{
+      --radius: 18px;
+      --shadow: 0 8px 24px rgba(0,0,0,.12);
     }
-    .wrap{ max-width:980px; margin:0 auto; padding:14px; }
+    html, body{
+      margin: 0;
+      height: 100%;
+      background: #f6f3ef;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #2b2b2b;
+    }
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 14px;
+    }
     .card{
-      background:#fff; border-radius:var(--radius);
-      box-shadow:var(--shadow); overflow:hidden;
-      position:relative;
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
-
     model-viewer{
-      width:100%;
-      height:70vh;
-      min-height:420px;
-      display:block;
-      /* “Nicht-weiß” Hintergrund, damit du siehst, dass gerendert wird */
+      width: 100%;
+      height: 70vh;
+      min-height: 420px;
+      display: block;
+
+      /* leichter Grid-Hintergrund (optional) */
       background:
         linear-gradient(0deg, rgba(0,0,0,.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,.03) 1px, transparent 1px);
       background-size: 28px 28px;
-      background-color:#fff;
+      background-color: #fff;
     }
-
     .bar{
-      display:flex; gap:10px; flex-wrap:wrap;
-      align-items:center; justify-content:space-between;
-      padding:10px 12px;
-      border-top:1px solid rgba(0,0,0,.08);
-      font-size:12.5px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      padding: 10px 12px;
+      border-top: 1px solid rgba(0,0,0,.08);
+      font-size: 12.5px;
     }
-    .hint{ opacity:.75; }
+    .hint{ opacity: .75; }
     .btn{
       border:1px solid rgba(0,0,0,.14);
       background:#fff;
@@ -52,52 +64,26 @@
       font-size:12.5px;
       line-height:1;
     }
-    .btn:hover{ background:rgba(0,0,0,.03); }
-
-    /* Overlay */
-    .overlay{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      pointer-events:none;
-      background:rgba(255,255,255,.85);
-      opacity:0; transition:.2s;
-    }
-    .overlay.on{ opacity:1; }
-    .overlay .box{
-      pointer-events:auto;
-      background:#fff;
-      border:1px solid rgba(0,0,0,.10);
-      border-radius:14px;
-      padding:12px 14px;
-      box-shadow:0 10px 26px rgba(0,0,0,.12);
-      width:min(360px, 86%);
-      font-size:13px;
-    }
-    .progressbar{
-      height:10px; border-radius:999px;
-      background:rgba(0,0,0,.08);
-      overflow:hidden; margin-top:8px;
-    }
-    .progressbar > div{
-      height:100%; width:0%;
-      background:rgba(0,0,0,.35);
-      transition:width .15s;
-    }
+    .btn:hover{ background: rgba(0,0,0,.03); }
 
     .err{
       display:none;
-      padding:10px 12px;
-      font-size:12.5px;
-      color:#b00020;
-      background:rgba(176,0,32,.06);
-      border-top:1px solid rgba(0,0,0,.08);
+      padding: 10px 12px;
+      font-size: 12.5px;
+      color: #b00020;
+      background: rgba(176,0,32,.06);
+      border-top: 1px solid rgba(0,0,0,.08);
     }
 
-    @media (max-width:700px){
-      model-viewer{ height:60vh; min-height:360px; }
+    @media (max-width: 700px){
+      model-viewer{
+        height: 60vh;
+        min-height: 360px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="card">
@@ -106,14 +92,15 @@
         id="mv"
         src="./Flowersrosa.glb"
         alt="3D Icon Flowersrosa"
+
         camera-controls
         touch-action="pan-y"
         auto-rotate
         rotation-per-second="18deg"
 
-        environment-image="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr"
-        exposure="1.45"
-        shadow-intensity="0.85"
+        environment-image="neutral"
+        exposure="1.6"
+        shadow-intensity="0.7"
         shadow-softness="0.8"
 
         min-camera-orbit="auto auto 0.05m"
@@ -121,18 +108,9 @@
         field-of-view="30deg"
       ></model-viewer>
 
-      <div class="overlay on" id="overlay">
-        <div class="box">
-          <div id="statusText"><strong>Lädt Modell…</strong></div>
-          <div class="progressbar"><div id="bar"></div></div>
-          <div style="margin-top:8px; opacity:.75; font-size:12px;">
-            Wenn das nicht fertig lädt: Script-Blocker / WebGL / Materialproblem.
-          </div>
-        </div>
-      </div>
-
       <div class="bar">
-        <div class="hint" id="hint">Tipp: Mit Maus/Finger drehen · Scroll/Pinch zoomen</div>
+        <div class="hint">Tipp: Mit Maus/Finger drehen · Scroll/Pinch zoomen</div>
+
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn" id="reset" type="button">Ansicht zurücksetzen</button>
           <button class="btn" id="toggleRotate" type="button">Auto-Rotate: an/aus</button>
@@ -140,75 +118,34 @@
       </div>
 
       <div class="err" id="err"></div>
+
     </div>
   </div>
 
- <script>
-  const mv = document.getElementById("mv");
-  const overlay = document.getElementById("overlay");
-  const bar = document.getElementById("bar");
-  const statusText = document.getElementById("statusText");
-  const err = document.getElementById("err");
-  const reset = document.getElementById("reset");
-  const toggleRotate = document.getElementById("toggleRotate");
+  <script>
+    const mv = document.getElementById("mv");
+    const reset = document.getElementById("reset");
+    const toggleRotate = document.getElementById("toggleRotate");
+    const err = document.getElementById("err");
 
-  let lastProgress = 0;
-  let overlayHidden = false;
-
-  function hideOverlay() {
-    if (overlayHidden) return;
-    overlayHidden = true;
-    overlay.classList.remove("on");
-    if (err) err.style.display = "none";
-  }
-
-  // Progress: wenn 100% erreicht, Overlay sicher ausblenden
-  mv.addEventListener("progress", (e) => {
-    const p = Math.round((e.detail.totalProgress || 0) * 100);
-    lastProgress = p;
-
-    bar.style.width = p + "%";
-    statusText.innerHTML = `<strong>Lädt Modell…</strong> ${p}%`;
-    overlay.classList.add("on");
-
-    if (p >= 100) {
-      // kleines Delay, damit Rendering fertig ist
-      setTimeout(hideOverlay, 250);
-    }
-  });
-
-  // Wenn load doch feuert: auch gut
-  mv.addEventListener("load", () => {
-    hideOverlay();
-  });
-
-  // Fallback: wenn nach X Sekunden 100% erreicht wurde, aber overlay bleibt
-  setInterval(() => {
-    if (!overlayHidden && lastProgress >= 100) hideOverlay();
-  }, 500);
-
-  mv.addEventListener("error", (e) => {
-    // Nur zeigen, wenn wirklich nix gerendert wird. Da es bei dir sichtbar ist,
-    // lassen wir das Overlay hier nicht "fest" hängen.
-    overlay.classList.remove("on");
-    if (err) {
+    // Falls model-viewer doch einen Fehler meldet (z.B. Environment), aber Modell sichtbar ist,
+    // lassen wir nur einen dezenten Hinweis da.
+    mv.addEventListener("error", (e) => {
       err.style.display = "block";
-      err.textContent =
-        "Hinweis: Es gab ein Problem bei einem Teil-Ladevorgang (z.B. Environment). Wenn das Modell sichtbar ist, kannst du diese Meldung ignorieren.";
-    }
-    console.log("model-viewer error:", e);
-  });
+      err.textContent = "Hinweis: Ein Asset konnte nicht geladen werden (z.B. Umgebung). Wenn das Modell sichtbar ist, kannst du das ignorieren.";
+      console.log("model-viewer error:", e);
+    });
 
-  reset.addEventListener("click", () => {
-    mv.cameraOrbit = "45deg 75deg 2m";
-    mv.fieldOfView = "30deg";
-    mv.jumpCameraToGoal();
-  });
+    // Reset auf eine stabile Standardansicht
+    reset.addEventListener("click", () => {
+      mv.cameraOrbit = "45deg 75deg 2m";
+      mv.fieldOfView = "30deg";
+      mv.jumpCameraToGoal();
+    });
 
-  toggleRotate.addEventListener("click", () => {
-    mv.autoRotate = !mv.autoRotate;
-  });
-</script>
-
+    toggleRotate.addEventListener("click", () => {
+      mv.autoRotate = !mv.autoRotate;
+    });
+  </script>
 </body>
 </html>
